@@ -48,3 +48,20 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+      - name: Build deployment image
+        run: docker build --tag swiftgrid:ci .
+
+      - name: Smoke-test deployment image
+        run: |
+          docker run --detach --name swiftgrid-ci -p 8000:8000 \
+            -e SWIFTGRID_ALLOW_RUNTIME_CONFIG=false \
+            swiftgrid:ci
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/api/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker logs swiftgrid-ci
+          exit 1

@@ -9,6 +9,7 @@
 [![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![CI](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml/badge.svg)](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![中文文档](https://img.shields.io/badge/README-中文-red.svg)](README_zh.md)
 
@@ -129,7 +130,7 @@ Dockerfile                        Single-service frontend + backend image
 ### Prerequisites
 
 - Python 3.11+
-- Node.js 20+
+- Node.js 24+
 - A DeepSeek key or another OpenAI-compatible endpoint for real LLM flows
 
 ### 1. Start the backend

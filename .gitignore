@@ -1,0 +1,61 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local runtime state
+data/
+.runtime/
+*.log
+*.pkl
+*.duckdb
+
+# Secrets
+.ds_key_temp.txt
+.env
+.env.*
+!.env.example
+!frontend/.env.local.example
+
+# Frontend dependencies and build output
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+frontend/*.tsbuildinfo
+frontend/.env.local
+
+# Generated reports and temporary inspection files
+.tmp*
+.tools/
+.github-release/
+artifacts/
+reports/
+biaosutong_test_cases/RUN_ALL_REPORT_*.md
+biaosutong_test_cases/stress/STRESS_REPORT_*.md
+biaosutong_test_cases/reports/
+biaosutong_test_cases/v2/reports/
+tmp_inspect*.json
+tmp_inspect*.txt
+_recovered_token_chat.txt
+leak.txt
+
+# Local design/source handoff material not needed for the runnable demo
+mockups/
+改前端和功能说明文档/
+
+# Office temporary lock files
+~$*.xlsx
+~$*.xls
+
+# Editor and OS files
+.claude/
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

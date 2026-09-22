@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #0f8a4d;
+  --brand-light: #2fbf71;
+  --brand-dark: #0b0f14;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #f3f5f7;
+  color: var(--brand-dark);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer components {
+  .grad-brand {
+    background: linear-gradient(180deg, #2fbf71 0%, #0f8a4d 100%);
+  }
+  .smooth {
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  /* 连线流动光（流式进度时间线的连线） */
+  .flowline {
+    background: linear-gradient(
+      180deg,
+      #0f8a4d 0%,
+      #0f8a4d 50%,
+      rgba(219, 234, 254, 0) 50%,
+      rgba(15, 138, 77, 0) 100%
+    );
+    background-size: 100% 200%;
+    animation: flow 1.2s linear infinite;
+  }
+  /* 主按钮光带横扫（处理中态） */
+  .sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .sweep::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.5) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    animation: sweep 1.4s ease-in-out infinite;
+  }
+}
+
+/* 滚动条（苹果风细窄） */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 拖拽悬停时虚线框流动 */
+.dz:hover .dz-rect {
+  animation: dashflow 1s linear infinite;
+  stroke: #0f8a4d;
+}

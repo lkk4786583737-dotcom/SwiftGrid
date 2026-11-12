@@ -10,7 +10,7 @@ export async function exportChart(
   format: ChartFormat,
   filename = "swiftgrid_chart",
 ): Promise<void> {
-  const svg = container?.querySelector("svg");
+  const svg = container?.querySelector('svg[role="img"]');
   if (!svg) throw new Error("未找到图表");
 
   // 克隆并补上命名空间 + 白底，保证脱离页面后样式干净

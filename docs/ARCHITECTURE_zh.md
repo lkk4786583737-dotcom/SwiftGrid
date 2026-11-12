@@ -1,206 +1,123 @@
-# SwiftGrid 后端与 LLM 处理架构
+# 表速通后端与 LLM 处理流程
 
-本文描述当前可运行版本的真实代码边界。主程序由 `frontend/`、`swiftgrid/backend/`、`engine.py` 与 `storage.py` 组成；`scripts/modeling_multi_agent/` 是下一代建模架构的实验实现，尚未替代主 API。
+[返回首页](../README.md) · [公开案例](DEMO_CASE_zh.md) · [迭代计划](PRODUCT_PLAN_zh.md)
 
-## 1. 系统边界
+本文聚焦当前可演示的“逻辑建模”和“处理新表”。智能制表与多 Agent 建模单列为探索部分。架构描述对应仓库实现，更新于 2026-11-12。
 
-```mermaid
-flowchart LR
-    U[用户浏览器] --> UI[Next.js 16 静态前端]
-    UI -->|REST 上传与控制| API[FastAPI API]
-    API -->|SSE 进度事件| UI
+![后端与 LLM 架构](assets/swiftgrid-architecture.svg)
 
-    subgraph Runtime[SwiftGrid Python Runtime]
-        API --> SESSION[内存句柄与会话]
-        API --> JOB[线程任务与事件队列]
-        JOB --> LEARN[样例学习引擎]
-        JOB --> COMPOSE[智能制表引擎]
-        LEARN --> VERIFY[确定性执行与全量校验]
-        COMPOSE --> PLAN[受控计划校验器]
-        PLAN --> SQL[SQLite 全量聚合执行]
-        VERIFY --> STORE[本地逻辑库]
-        SQL --> STORE
-    end
+## 1. 系统分工
 
-    LEARN -->|OpenAI-compatible API| LLM[DeepSeek / 私有兼容模型]
-    COMPOSE -->|仅发送紧凑画像和需求| LLM
-    STORE --> DISK[(data/ JSON + Python + Pickle)]
-```
+| 层 | 实现位置 | 职责 |
+| --- | --- | --- |
+| 交互层 | [`frontend/`](../frontend/) | 输入预览、学习、逻辑库、新表处理、结果分析、图表与下载 |
+| API 层 | [`swiftgrid/backend/api/`](../swiftgrid/backend/api/) | 文件解析、会话句柄、任务控制与 SSE 进度 |
+| 任务层 | [`services/orchestrator.py`](../swiftgrid/backend/services/orchestrator.py) | 在线程中运行耗时任务，用事件队列向页面反馈进度 |
+| 学习与复用引擎 | [`engine.py`](../engine.py) | 模型请求、生成代码护栏、执行、完整目标校验、差异与修复 |
+| 逻辑存储 | [`storage.py`](../storage.py) | 保存代码、结构画像及学习数据，支持查找和复用 |
+| 结果服务 | [`services/tableio.py`](../swiftgrid/backend/services/tableio.py)、[`analysis.py`](../swiftgrid/backend/services/analysis.py) | 预览与 Excel 导出、基础统计与图表数据 |
+| 模型服务 | OpenAI-compatible API | 根据上下文提出处理代码、解释失败、尝试修复 |
 
-### 组件职责
+Next.js 构建为静态文件，由 FastAPI 托管时前后端同源。开发模式可分别运行在 3000 与 8000 端口。`app.py` 是早期 Streamlit 原型。
 
-| 组件 | 真实职责 |
-| --- | --- |
-| `frontend/` | 上传、预览、澄清、SSE 进度、结果查看和下载 |
-| `swiftgrid/backend/api/` | REST/SSE 边界，校验句柄并启动后台任务 |
-| `swiftgrid/backend/services/orchestrator.py` | 将阻塞模型调用放入工作线程，通过队列推送 SSE |
-| `engine.py` | 样例驱动代码生成、执行、目标比对、自修正与运行期自愈 |
-| `swiftgrid/backend/services/compose_ai.py` | 把紧凑数据画像和用户需求转换成受控 JSON 计划 |
-| `compose_plan.py` | 校验字段、筛选、表达式、聚合和排序协议 |
-| `compose.py` | 流式导入、SQLite 暂存、全量确定性执行、结果导出 |
-| `storage.py` | 保存逻辑、训练样例画像、计划和结构匹配索引 |
-
-## 2. LLM 路径 A：从源表与目标样例学习逻辑
-
-这条路径解决“我已经做过一次，希望以后自动重复”的任务。模型负责提出 Python 转换程序，但是否成功由本地完整目标表决定。
+## 2. 首次学习：输入如何变成可保存逻辑
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant UI as Next.js UI
-    participant API as FastAPI
+    actor U as 用户
+    participant UI as Next.js
+    participant API as FastAPI / 任务队列
     participant E as engine.py
     participant M as LLM
-    participant V as Local Validator
-    participant S as Logic Store
-
-    U->>UI: Upload source workbook and target example
-    UI->>API: POST /api/parse
-    API->>E: Parse every workbook sheet into DataFrames
-    API-->>UI: Return opaque handles and bounded previews
-
-    UI->>API: POST /api/learn/start
-    UI->>API: GET /api/learn/stream/{session_id}
-    API->>E: Start generate_and_test_logic
-
-    loop Up to 3 self-repair attempts
-        E->>M: Send samples, target shape, formula hints, clarifications, previous error
-        M-->>E: Return process_data(source_dfs) Python
-        E->>V: AST guardrail and restricted in-memory execution
-        V->>V: Run against full source and compare with full target
-        alt Exact match
-            V-->>E: Accepted code and result
-        else Execution or value mismatch
-            V-->>E: Deterministic diff summary
-            E->>M: Feed the real error/diff into the next repair attempt
+    participant S as 本地逻辑库
+    U->>UI: 源工作簿 + 目标样例
+    UI->>API: /api/parse 解析与预览
+    API-->>UI: 工作表预览 + 数据句柄
+    UI->>API: /api/learn/start
+    UI->>API: /api/learn/stream/{session_id}
+    API->>E: 全量源数据与完整学习目标
+    loop 默认最多 3 次生成尝试
+        E->>M: 字段、少量样例、公式、澄清、上轮错误
+        M-->>E: process_data(source_dfs) Python 代码
+        E->>E: AST 护栏 → 全量执行 → 完整目标比对
+        alt 校验通过
+            E-->>API: 代码与结果，结束本轮学习
+        else 执行或比对失败
+            E->>E: 形成真实错误与差异摘要
         end
     end
-
-    alt Verified
-        E-->>API: Code, result preview, suggested name
-        API-->>UI: SSE success
-        U->>UI: Confirm logic name
-        UI->>API: POST /api/learn/save/{session_id}
-        API->>S: Persist code, profile and learning samples
-    else Still ambiguous
-        E->>M: Explain only the deterministic mismatch
-        M-->>E: Plain-language diagnosis and suggested clarification
+    alt 已通过校验
+        API-->>UI: SSE success + 结果预览
+        U->>UI: 检查结果、命名并保存
+        UI->>API: /api/learn/save/{session_id}
+        API->>S: 代码、结构画像、学习数据
+    else 尝试后仍未通过
+        API->>M: 基于差异提出诊断与澄清建议
         API-->>UI: SSE clarify
-        U->>UI: Confirm or correct the business rule
+        U->>UI: 补充业务规则后重新尝试
     end
 ```
 
-### 模型看到什么
+关键入口是 `generate_and_test_logic()`：模型返回代码后，`run_process_data()` 执行，`assert_results_match()` 判断数据是否符合学习目标。通过时立即返回，不会固定消耗全部轮次。模型解释本身不能将失败状态改为成功。
 
-- 每张源表的列名和少量样例行；
-- 目标结果的结构和少量样例；
-- 目标 Excel 中可提取的公式线索；
-- 用户已经确认的澄清；
-- 上一轮真实执行错误或本地差异摘要。
+“完整目标校验”指处理结果与给定目标数据的比对，**不是 Excel 文件的逐字节比较，也不意味着样式、宏、Sheet 名或复杂模板都已复刻**。目标样例覆盖不了的业务规则，仍可能被错误推断。
 
-### 模型不决定什么
-
-- 不直接宣告结果正确；
-- 不把抽样输出当成最终结果；
-- 不绕过完整目标表校验；
-- 不直接把解释文字保存成可复用逻辑。
-
-通过校验的逻辑在处理新周期表格时先做结构匹配，再执行锁定代码。若字段结构漂移导致失败，模型可以提出修复代码；修复必须先回放学习样例并再次通过目标校验，之后才用于新表。
-
-## 3. LLM 路径 B：只有源表时的智能制表
-
-这条路径解决“我只有数据，希望先得到可执行制表方向”的任务。与样例学习不同，模型不输出最终数值，也不执行任意 Python；它只生成受控计划。
+## 3. 新期复用：何时调用模型
 
 ```mermaid
-sequenceDiagram
-    participant U as User
-    participant API as FastAPI
-    participant P as Profiler
-    participant M as LLM Planner
-    participant G as Plan Guard
-    participant X as Deterministic Executor
-
-    U->>API: Upload one or more Excel/CSV files
-    API->>P: Stream rows into session SQLite
-    P->>P: Infer types, null rates, cardinality, candidate keys and relationships
-    P-->>API: Dataset card plus quality findings
-
-    API->>M: Send compact dataset card, not the full workbook
-    M-->>API: Return directions or a complete JSON table plan
-    API->>G: Validate real fields, filter operators, expressions, grouping and sorting
-
-    alt Invalid or incomplete plan
-        G-->>M: Return bounded validation gaps for one repair
-        M-->>G: Return a complete repaired plan
-    else Blocking business ambiguity
-        G-->>U: Ask a concrete question before execution
-    end
-
-    U->>API: Confirm requirement summary
-    API->>X: Execute the accepted plan over all local rows
-    X->>X: Filter, derive, group, aggregate, sort and run quality checks
-    X-->>U: Preview, Excel download and optional logic-library import
+flowchart TD
+    A[新源表 + 已保存逻辑] --> B[按学习画像对齐工作表键名]
+    B --> C[本地执行已保存代码]
+    C -->|正常返回| D[结果预览 / 报告 / 图表 / 导出]
+    C -->|执行异常| E[错误 + 原学习样例 + 新表结构]
+    E --> F[LLM 提出修复代码]
+    F --> G[先执行原学习数据并校验目标]
+    G -->|通过| H[执行新源表]
+    H -->|成功| I[保存修复代码并返回结果]
+    H -->|失败| J[反馈错误，有限轮修复]
+    G -->|失败| J
+    J -->|尚有次数| F
+    J -->|次数耗尽| K[返回失败]
 ```
 
-受控表达式仅支持字段、常量、算术、空值回退、拼接与条件表达式；聚合仅支持明确白名单。模型返回 Python、SQL 或协议外操作时，计划会被拒绝。
+实现入口为 `phase2_process_with_healing()`。正常执行分支在创建模型客户端前返回，因此**该执行分支没有模型调用**；当前 API 仍要求配置模型密钥，以支持失败后的修复路径。
 
-## 4. 数据与隐私边界
+修复路径默认最多 3 次，先回放学习数据、通过目标校验，再尝试新数据。它是错误恢复机制，不能保证任意字段漂移都能修复。尤其要区分：
 
-| 数据 | 默认位置 | 是否发送给模型 |
-| --- | --- | --- |
-| 上传的完整工作簿 | 进程内存或 `data/compose_sessions` | 否 |
-| 源表样例 | 请求上下文 | 样例学习路径会发送 |
-| 目标表样例/公式线索 | 请求上下文 | 样例学习路径会发送 |
-| 智能制表数据画像 | 请求上下文 | 会发送紧凑画像 |
-| 最终全量计算 | 本地 pandas / SQLite | 否 |
-| API Key | 环境变量或进程内存 | 仅用于模型请求，不写入逻辑库 |
+- **报错能被发现：** 缺列、类型或代码执行异常可进入修复。
+- **不报错也可能算错：** 分类含义变化、关联重复或新业务口径，可能返回看似合理的结果。新期通常没有完整目标可比对，需要跨期测试与业务约束。
 
-当前版本不是多租户服务：内存句柄、模型配置和逻辑库均为单实例共享。在没有认证、隔离、配额和独立代码沙箱前，不应直接作为匿名公网 SaaS。
+本次演示只验证公开案例的成功复用，没有将所有异常、自愈分支或多目标工作簿列为已验证能力。
 
-## 5. 实验性多 Agent 建模架构
+## 4. 模型看到了什么，数据保存在何处
 
-`scripts/modeling_multi_agent/` 提供 Workbook Intent IR、证据引用、代数不变量校验、计划编译、确定性执行和结果审计。它用于验证下一代架构，不是当前 `/api/compose/*` 的生产实现。
+| 数据 / 产物 | 当前用途与边界 |
+| --- | --- |
+| 完整源数据与完整学习目标 | 在服务进程内解析和执行；保存逻辑时会持久化学习数据供回放，需保护本地 `data/` |
+| 字段、源表和目标表的少量样例 | 进入学习请求，可能包含真实业务单元格 |
+| 公式线索、业务澄清、错误和差异摘要 | 可能发送给配置的模型服务；同样需要考虑敏感内容 |
+| 新数据 | 正常复用在本地执行；发生异常时，新表结构与错误进入修复上下文 |
+| 生成脚本、结构画像、学习数据 | 保存在本地逻辑库；后续直接执行或回放 |
+| 模型密钥 | 服务端环境变量或进程配置；不应提交到仓库 |
 
-```mermaid
-flowchart LR
-    C[Dataset Card + User Goal] --> A[Modeling Agent]
-    A --> IR[Workbook Intent IR]
-    IR --> CAN[Canonicalizer]
-    CAN --> COMP[Plan Compiler]
-    COMP --> VAL[Algebraic Invariant Validator]
-    VAL -->|invalid| REPAIR[Bounded Repair Agent]
-    REPAIR --> COMP
-    VAL -->|blocked| HITL[User Decision]
-    VAL -->|ready| PLAN[Typed Execution Plan]
-    PLAN --> EXEC[Pandas Plan Executor]
-    EXEC --> AUDIT[Full-data Result Auditor]
-```
+因此，本项目的准确表述是“**全量计算在本地，模型使用有限上下文**”。企业使用应根据数据性质处理样例与日志，或配置符合自身要求的兼容模型网关；当前实现不提供“零数据外发”保证。
 
-这一实验方向的核心不是“增加更多模型”，而是让模型输出可编译的意图，让字段粒度、关联基数、指标可加性、去重口径和证据引用在执行前被程序验证。
+## 5. 结果分析与图表
 
-## 6. 运行与部署边界
+结果页的分析以确定性统计和规则提示为主。图表接口提供聚合后的点，前端负责显示与图片导出，尚不是结合企业知识完成的专业经营诊断。
 
-- 前端通过 `next build` 导出静态文件，由 FastAPI 同源托管；
-- 后端需要长进程、文件上传、SSE 和本地磁盘，因此不适合纯静态托管；
-- Docker 镜像把前端构建与 Python 运行时合并成单服务；
-- 若希望保留逻辑库和会话草稿，云平台应把持久卷挂载到 `/app/data`；
-- 公共部署应设置 `SWIFTGRID_ALLOW_RUNTIME_CONFIG=false`，并在服务端注入模型密钥；
-- 当前 AST 校验和受限 builtins 是防误用护栏，不等同于不可信代码的强隔离。公网多用户版本应把生成代码放入独立容器/微虚机，并增加 CPU、内存、网络和文件系统限制。
+本次版本修复了前端柱形额外截断、饼图遗漏类别和图片误选图标的问题。后端仍有展示点数限制，页面会提示限量；饼图合并的是接口返回的类别。公开案例的 35 类未触及后端限制，核对了全部 35 类的总量与显示。[具体检查](DEMO_CASE_zh.md)
 
-## 7. 当前优势与局限
+## 6. 探索中的智能制表与多 Agent
 
-### 优势
+`services/compose_ai.py`、`compose_plan.py`、`compose.py` 探索“紧凑数据画像 → LLM 提出受控 JSON 计划 → 协议校验 → 本地 pandas / SQLite 计算”的路线。代码中已有流程不等于端到端已稳定，当前不作为主展示能力。
 
-- 模型生成与本地全量验证分离，成功条件不是“模型觉得正确”；
-- 失败反馈来自确定性差异，模型自修正有事实锚点；
-- 智能制表使用受控计划协议，最终数值由程序计算；
-- 支持多 Sheet、逻辑保存、结构匹配、SSE 进度和 Excel 导出；
-- OpenAI-compatible 客户端允许切换 DeepSeek 或企业兼容网关。
+`scripts/modeling_multi_agent/` 另行探索意图 IR、编译、业务不变量和结果审计，尚未替代正式主 API。自然语言取数、LLM Wiki 与业务本体也尚未集成。后续路线见 [产品计划](PRODUCT_PLAN_zh.md)。
 
-### 局限
+## 7. 部署与实现局限
 
-- 当前是单实例、单租户本地工具，没有账号、租户隔离与公共限流；
-- 复杂 Excel 模板、跨区块报表、宏和数据透视表并非全部稳定支持；
-- 样例学习仍会执行模型生成的 Python，公开部署需要更强沙箱；
-- 模型只看到有限样例时，无法唯一反推的业务口径仍需要用户确认；
-- 多 Agent IR 是实验代码，尚未完全接入主产品链路。
+- 当前为单实例、单租户；会话、模型配置和逻辑存储没有用户级隔离。
+- AST 与受限执行环境是护栏，不是强隔离沙箱；运行生成代码仍需要独立执行边界。
+- 复杂多区块模板、宏、透视表、完整样式与工作表名称契约尚不完整。
+- 目标样例通过只证明符合这份数据，无法替代独立测试集、业务口径确认和跨期审计。
+- 同源构建与 Docker 已提供；常驻公网服务还需要认证、隔离、限流、成本控制和持久化运维。[部署说明](DEPLOYMENT_zh.md)

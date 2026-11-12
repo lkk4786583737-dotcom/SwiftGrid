@@ -26,6 +26,9 @@ jobs:
       - name: Compile backend
         run: python -m py_compile engine.py storage.py swiftgrid/backend/main.py
 
+      - name: Verify recorded public demo results
+        run: python examples/quarterly-sales/verify_results.py
+
       - name: Run offline modeling tests
         run: |
           python -m unittest discover -s tests -p "test_modeling_multi_agent_*.py" -v

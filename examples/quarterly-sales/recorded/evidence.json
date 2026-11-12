@@ -1,0 +1,59 @@
+{
+  "recorded_date": "2026-11-12",
+  "model_displayed": "deepseek-flash",
+  "timings_single_local_run_seconds": {
+    "learning": 57.191,
+    "period_b_upload_to_success": 3.824,
+    "period_c_upload_to_success": 2.389
+  },
+  "scope": "One public case, three periods. Not aggregate accuracy or a performance SLA.",
+  "known_export_difference": {
+    "actual_sheet": "结果",
+    "reference_sheet": "Sheet1"
+  },
+  "chart_checks": [
+    {
+      "name": "35 categories all rendered",
+      "title": "按子类别对比全年合计",
+      "bars": 35,
+      "text": "按子类别对比全年合计结果表 · 全量 35 行 · 求和聚合04177.758355.501.3万1.7万Road BikesHelmetsVestsTouring Fr…SaddlesDerailleur…Pumps子类别求和 全年合计"
+    },
+    {
+      "name": "pie preserves total and groups remaining 28 categories",
+      "total": 131936,
+      "other": 57622,
+      "expectedPct": 44,
+      "slices": 8
+    },
+    {
+      "name": "scatter axes and 35 points",
+      "count": 35,
+      "title": "Q1与Q2关系"
+    },
+    {
+      "name": "histogram count equals all 35 categories",
+      "bins": 5
+    },
+    {
+      "name": "custom title updates after analysis recommendation",
+      "customTitle": "按子类别对比全年合计"
+    }
+  ],
+  "chart_export_formats_checked": [
+    "PNG",
+    "SVG",
+    "JPG"
+  ],
+  "workbook_sha256": {
+    "learn/source.xlsx": "b54725f6567e24db78de59302cf54cb82914a685035be0cc0ed8ac558e0320d1",
+    "learn/target.xlsx": "80cf964205b98853343151e6383a7a827d9b06d6080e7b1baafdbe7a07affcf8",
+    "period-b/expected.xlsx": "9fe4da0bd4e57cc27b41325fc2ed3cd7483cbf03cf7a77f28dcbc6cfe8ecf462",
+    "period-b/source.xlsx": "72a2a4ab42a16c1543d0607ebf1b82361b84c61638d454657315b91e9c26b2f8",
+    "period-c/expected.xlsx": "2a503d24179805b89aaef20bbd0b43f70ffedf088af868a5dcddf674f0097f4b",
+    "period-c/source.xlsx": "9ca334fd1a7b74368011f6177f8d3902123427eca618a5f779341598121c81e3",
+    "recorded/result-learn.xlsx": "f6f47f07c1bcbb178b1ab2093aa51b75944bba0408cbf332d0193b6d79c9832d",
+    "recorded/result-period_b.xlsx": "3efed1160efd587845b0c81b47b3fd289cc2482839d2f6e8b3c586d5332763ca",
+    "recorded/result-period_c.xlsx": "7152d6733d1c28fbfc936a87c40a01cf03ea735aa3c1181d05e53c6d22b238a2"
+  },
+  "video_sha256": "74848a497db8be9c50fd13da4318ba51e0997615accd17172b1b0b2f406055c6"
+}

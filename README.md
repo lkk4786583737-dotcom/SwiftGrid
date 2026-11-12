@@ -1,245 +1,115 @@
 <div align="center">
 
-<img src="docs/assets/swiftgrid-hero.png" alt="SwiftGrid AI spreadsheet automation" width="100%" />
+# 表速通 SwiftGrid
 
-# SwiftGrid: Learn Spreadsheet Workflows from Examples
+**用一份做好的报表，教会 AI 下一期怎么做。**
 
-**Teach with a source workbook and a finished example. Reuse the verified logic on the next workbook.**
+从源表与目标样例学习处理逻辑，经全量数据校验后保存，复用于后续周期。
 
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml/badge.svg)](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![中文文档](https://img.shields.io/badge/README-中文-red.svg)](README_zh.md)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+[演示与复现](docs/DEMO_CASE_zh.md) · [产品思考与个人贡献](docs/PRODUCT_STORY_zh.md) · [后端与 LLM 流程](docs/ARCHITECTURE_zh.md) · [English](README_en.md)
 
 </div>
 
-SwiftGrid (表速通) is an AI-assisted spreadsheet workflow tool for operations, finance, sales, and HR teams. Instead of asking users to translate a finished Excel workflow into a long prompt, SwiftGrid learns from the artifact they already have: the source workbook and the expected result.
+## 🎬 先看一次完整演示
 
-The LLM proposes a reusable transformation. The local engine executes it against the complete source and accepts it only when the complete output matches the target. A second workflow starts with source data only: the model proposes a constrained table plan, while deterministic code calculates every final value.
+**约 3 分 50 秒，中文解说与字幕，真实 Web 操作。** 用四张业务表学习季度销量报表，再复用到两个新周期，完成结果核对、数据分析、可视化和导出。
 
-> **Status:** open-source research and portfolio release. The local single-user workflow is runnable; it is not yet a hardened anonymous multi-tenant SaaS.
+<!-- DEMO_VIDEO -->
+[![观看表速通演示：多表学习、跨期复用与图表导出](docs/assets/demo-charts.png)](docs/DEMO_CASE_zh.md)
 
-## Product Preview
-
-| Learn reusable logic | Build a new table from source data |
+| 想了解什么 | 从哪里开始 |
 | --- | --- |
-| ![Learn workflow](docs/assets/swiftgrid-home.png) | ![Smart table workflow](docs/assets/swiftgrid-compose.png) |
+| 产品解决什么问题、我做了什么 | [项目背景与五项核心贡献](docs/PRODUCT_STORY_zh.md) |
+| 功能有没有实际跑通 | [演示数据、三期结果与核对方法](docs/DEMO_CASE_zh.md) |
+| LLM 怎样参与、结果怎样验收 | [学习与复用的完整处理流程](docs/ARCHITECTURE_zh.md) |
+| 怎样运行、下一步做什么 | [本地启动](docs/GETTING_STARTED_zh.md) · [产品范围与迭代计划](docs/PRODUCT_PLAN_zh.md) |
 
-Live demo: **deployment pending**. The repository includes a production Dockerfile so the same frontend and backend can be deployed as one service when the hosting and access policy are confirmed.
+## 💡 为什么做表速通
 
-## 🌟 Core Features
+项目来自我在产品经理实习中的重复统计任务：活动大促或新功能上线后，监控方案不断调整；统计口径确定后，又要每天拉取新数据，重复关联、汇总和核对。
 
-| Feature | What it does |
+业务人员通常已经有一份做好的报表，却很难一次写清全部计算规则。表速通以 **“源数据＋目标样例”** 表达任务：让模型提出转换程序，让程序检验结果，再把通过验证的逻辑存入逻辑库。后续数据沿用同一套口径，减少重复描述与重复建模。
+
+### 真实需求与付酬验证
+
+> 为一名银行从业用户处理 **4 个季度、20 个 Sheet、约 114.6 万行销售数据**，借助 AI 辅助开发专用确定性脚本完成分类汇总，将约半天人工处理缩短至 **约 10 分钟**，获得用户主动付酬，验证了该场景的提效与交付价值。
+
+这是一次真实的**专用脚本交付**，由项目作者根据交付经历确认；客户数据不公开。它验证了需求与交付价值，尚不能等同于当前 Web 产品对任意百万行工作簿的通用处理能力。Web 流程的公开验证见下方演示案例。
+
+## 🌟 当前可以体验什么
+
+| 能力 | 用户得到的价值 |
 | --- | --- |
-| 🎯 **Example-driven learning** | Uses a source workbook plus a finished target example; users do not need to write pandas code or a complete specification. |
-| 🔁 **Generate → execute → verify loop** | Runs model-authored logic locally against the full dataset and returns deterministic differences to the next repair attempt. |
-| 💬 **Evidence-based clarification** | When the rule cannot be uniquely inferred, surfaces the concrete row/column mismatch and drafts a plain-language question. |
-| 🧩 **Multi-sheet workflows** | Parses every source sheet and can return one DataFrame or a named set of output sheets. |
-| 🧠 **Constrained smart-table planning** | With source data only, the model emits a typed JSON plan instead of final numbers or arbitrary SQL. |
-| 🧮 **Deterministic full-data execution** | Filters, expressions, grouping, aggregation, sorting, and result generation run locally with pandas/SQLite. |
-| 📚 **Reusable logic library** | Stores verified Python logic or smart-table plans and matches future workbooks by structural profile. |
-| 📡 **Streaming progress** | Long-running model and data jobs publish progress, clarification, success, error, and cancellation events over SSE. |
-| 🔌 **OpenAI-compatible models** | Defaults to DeepSeek and supports compatible private gateways through model/base URL configuration. |
+| 🎯 样例驱动的逻辑建模 | 上传源表与目标表，减少从零描述关联、汇总、透视和排序规则的负担 |
+| ✅ 执行与目标校验 | 生成的代码在本地处理完整源数据，并与完整学习目标核对；失败时提供差异反馈与有限轮修正 |
+| 📚 逻辑保存与新表复用 | 保存可查看、可下载的处理脚本；新周期先匹配结构并执行已保存逻辑，正常执行路径无需再次调用模型 |
+| 👀 输入与过程可见 | 工作表预览、粘贴表格、流式进度、结果预览和处理报告，帮助检查输入与产物 |
+| 📊 结果分析与可视化 | 基础统计、规则提示、推荐图表、自定义坐标轴与聚合；支持柱状图、饼图、散点图、直方图等 |
+| 📥 可带走的交付物 | 下载 Excel、处理脚本，以及 PNG / SVG / JPG 图表 |
 
-## 🏗️ Architecture
+**当前展示聚焦“逻辑建模”和“处理新表”。** 智能制表仍在探索，代码与页面保留，但不作为稳定交付功能。自然语言取数、企业知识底座与深度经营分析属于后续计划。当前为本地单用户作品版本，尚未提供常驻公网体验服务。
 
-```mermaid
-flowchart LR
-    U[User] --> UI[Next.js Static UI]
-    UI -->|REST + uploads| API[FastAPI]
-    API -->|SSE events| UI
-    API --> SESSION[In-memory handles and sessions]
-    API --> JOB[Threaded job queue]
-    JOB --> LEARN[Example-learning engine]
-    JOB --> COMPOSE[Smart-table planner]
-    LEARN --> LLM[OpenAI-compatible LLM]
-    COMPOSE --> LLM
-    LEARN --> VERIFY[Local execution and full-target verification]
-    COMPOSE --> GUARD[Plan protocol validator]
-    GUARD --> EXEC[Deterministic pandas and SQLite executor]
-    VERIFY --> STORE[(Local logic store)]
-    EXEC --> STORE
-```
+## 🧭 我在项目中负责什么
 
-The running product has two distinct LLM contracts:
+我负责需求识别、全部交互设计、技术方案判断、验收与迭代；AI 工具协助后端及部分结构匹配算法开发。
 
-1. **Learn from an example:** the model writes `process_data(source_dfs)`; local execution and full-target comparison decide whether it is accepted.
-2. **Compose from source data:** the model writes a constrained plan; a validator rejects unknown fields and unsupported operations before deterministic execution.
+| 能力维度 | 具体工作与证据 |
+| --- | --- |
+| 需求理解 | 从临时建模与周期性报表任务中，拆出“首次定义口径、后续重复执行”两个阶段；通过真实付酬交付验证需求价值 |
+| 产品设计 | 设计学习、核对、保存、复用与导出流程；根据错传同名近似文件的反馈增加预览，为小数据任务增加粘贴入口 |
+| AI 方案设计 | 提出模型生成规则、本地全量执行与目标校验的方案；将模型的推理能力与程序的数值计算职责分开 |
+| 范围与优先级 | 先完成可验收的样例学习与跨期复用，将尚不稳定的智能制表留在探索阶段 |
+| 验收与迭代 | 使用构造数据、实际业务数据和执行轨迹排查问题；本次公开演示核对三期结果，并修复图表类别截断、占比和导出问题 |
 
-### The example-learning loop
+[展开阅读：问题 → 决策 → 结果 → 反思](docs/PRODUCT_STORY_zh.md)
 
-```mermaid
-sequenceDiagram
-    participant UI as Browser
-    participant API as FastAPI
-    participant E as Engine
-    participant M as LLM
-    participant V as Local Validator
+## 🏗️ 后端与 LLM 如何协作
 
-    UI->>API: Upload source and target workbooks
-    API->>E: Parse sheets and create opaque handles
-    UI->>API: Start learning and open SSE stream
-    loop Up to 3 self-repair attempts
-        E->>M: Samples + formula hints + confirmed clarifications + last real error
-        M-->>E: process_data(source_dfs)
-        E->>V: AST guardrail and in-memory execution
-        V->>V: Compare full result with full target
-        V-->>E: Accept or return deterministic diff
-    end
-    alt Full match
-        E-->>UI: Verified result and save action
-    else Still ambiguous
-        E-->>UI: Concrete diagnosis and clarification request
-    end
-```
+![表速通后端架构：样例学习与新表复用](docs/assets/swiftgrid-architecture.svg)
 
-The model never certifies its own output. For a detailed component map, data boundary, smart-table protocol, and the experimental multi-agent IR, read [Backend & LLM Architecture](docs/ARCHITECTURE_zh.md).
+1. **学习阶段：** FastAPI 解析工作簿；LLM 接收字段、少量样例、公式线索与澄清信息，生成 `process_data(source_dfs)`。
+2. **验收阶段：** 引擎检查代码并在本地处理全量源数据，与完整学习目标比对。真实错误或差异反馈到下一轮，默认最多 3 次生成尝试；仍有问题时交由用户澄清。
+3. **复用阶段：** 结构对齐后直接运行保存的逻辑。执行报错才进入模型修复路径；修复代码须先回放学习样例，再尝试处理新表。
+4. **交付阶段：** 提供表格、处理报告、基础统计、图表与下载。数据分析目前以规则与统计为主。
 
-## 🧠 What Is New Compared with a Generic Spreadsheet Chatbot?
+全量计算在本地完成，**字段、样例单元格、公式线索及错误摘要仍可能发送到配置的模型服务**。学习样例通过校验不代表任意新数据都正确；不报错的业务口径变化仍需额外核对。详见 [数据边界与已知局限](docs/ARCHITECTURE_zh.md)。
 
-- **A finished workbook is treated as executable evidence.** The target is not just attached context; it is the local acceptance test.
-- **The model is separated from final calculation.** It proposes code or a plan, while the runtime computes the complete result.
-- **Repair is grounded in actual failures.** Syntax errors, execution errors, and value mismatches are fed back as bounded evidence.
-- **Reusable assets survive the chat.** Verified transformations are stored, structurally matched, and applied to later periods.
-- **Ambiguity remains visible.** Unsupported or under-specified rules become explicit questions instead of silent model assumptions.
+## 🧪 公开案例：四表关联到季度销量报表
 
-## Repository Map
+演示使用 Microsoft AdventureWorks 官方样例数据的整理版本，四张表分别为订单头、订单明细、商品与子类别。处理包含三次关联、日期转季度、汇总透视、缺失季度补零、销量排名及占比。
 
-```text
-frontend/                         Next.js 16 static frontend
-swiftgrid/backend/
-  api/                            FastAPI REST and SSE routes
-  services/orchestrator.py        Background jobs and event streaming
-  services/compose_ai.py          LLM-to-constrained-plan adapter
-  services/compose_plan.py        Plan protocol validation
-  services/compose.py             Import, profiling, SQLite execution, export
-engine.py                         Example learning, verification, repair, reuse
-storage.py                        Local logic metadata and artifacts
-scripts/modeling_multi_agent/     Experimental typed IR/compiler/auditor
-docs/ARCHITECTURE_zh.md           Detailed backend and LLM architecture
-docs/DEPLOYMENT_zh.md             Hosting choices and production checklist
-Dockerfile                        Single-service frontend + backend image
-```
+| 周期 | 订单明细行数 | 结果行数 | 实际下载结果核对 |
+| --- | ---: | ---: | --- |
+| 学习期 | 20,817 | 18 | 数据值、列序与行序一致 |
+| 下一年复用 | 56,721 | 35 | 数据值、列序与行序一致 |
+| 仅上半年复用 | 37,191 | 30 | 数据值、列序与行序一致；Q3 / Q4 为 0 |
 
-`app.py` is the earlier Streamlit prototype. The recommended product path is `frontend/` + `swiftgrid/backend/`.
+同一案例的三个周期不能代表整体准确率。当前导出工作表名为“结果”，标准文件为“Sheet1”，尚不等于完整 Excel 模板复刻。数据、独立参考计算、实际输出和核对脚本均位于 [examples/quarterly-sales](examples/quarterly-sales/README.md)。
 
-## Get Started
+## ⚖️ 优势与待解决的问题
 
-### Prerequisites
+| 已有优势 | 当前边界与改进方向 |
+| --- | --- |
+| 用目标样例形成明确验收依据 | 样例不足可能导致多种规则都通过，需要跨期测试与业务澄清 |
+| 保存脚本，后续正常路径直接执行 | 结构相似不保证业务口径相同；需要更多漂移检测与业务不变量 |
+| 结果、脚本与图表可以检查和导出 | 复杂跨区块模板、宏、透视表与完整样式还原尚未保证 |
+| 完整数据在本地计算，可配置兼容模型接口 | 样例仍可能外发；AST 护栏不是强隔离沙箱，当前没有多租户隔离 |
+| 已有真实交付与公开演示两类证据 | 尚无大样本成功率、平均性能或规模化商业验证 |
 
-- Python 3.11+
-- Node.js 24+
-- A DeepSeek key or another OpenAI-compatible endpoint for real LLM flows
+## 🚀 本地运行与后续计划
 
-### 1. Start the backend
+推荐使用 `frontend/`（Next.js 静态前端）与 `swiftgrid/backend/`（FastAPI 后端）。[启动指南](docs/GETTING_STARTED_zh.md) 提供开发模式、同源构建和 Docker 命令；`app.py` 为早期 Streamlit 原型。
 
-```bash
-python -m venv .venv
+接下来优先完善跨期正确性、结果契约与执行隔离；随后探索受控智能制表。更长期考虑以 LLM Wiki 与业务本体组织企业指标、字段关系和业务口径，连接自然语言取数与经营分析。以上为计划，详见 [阶段目标与验收条件](docs/PRODUCT_PLAN_zh.md)。
 
-# Windows
-.venv\Scripts\pip.exe install -r requirements.txt
-.venv\Scripts\python.exe -m uvicorn swiftgrid.backend.main:app --host 127.0.0.1 --port 8000 --reload
+## License 与参考
 
-# macOS / Linux
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python -m uvicorn swiftgrid.backend.main:app --host 127.0.0.1 --port 8000 --reload
-```
+项目代码采用 [MIT License](LICENSE)。公开演示数据来自 [Microsoft AdventureWorks](https://github.com/microsoft/sql-server-samples/tree/master/samples/databases/adventure-works)，保留了 [来源、处理说明与许可](examples/quarterly-sales/SOURCE_AND_LICENSE.md)。
 
-### 2. Start the frontend in development
-
-```bash
-cd frontend
-npm ci
-npm run dev
-```
-
-Open `http://localhost:3000`. Set `NEXT_PUBLIC_API_BASE=http://localhost:8000` in `frontend/.env.local` for split frontend/backend development.
-
-### 3. Build the same-origin release
-
-```bash
-cd frontend
-npm ci
-npm run build
-cd ..
-python -m uvicorn swiftgrid.backend.main:app --host 127.0.0.1 --port 8000
-```
-
-The FastAPI app detects `frontend/out` and serves the static frontend at `http://localhost:8000`.
-
-### Docker
-
-```bash
-docker build -t swiftgrid .
-docker run --rm -p 8000:8000 \
-  -e SWIFTGRID_API_KEY=your-key \
-  -e SWIFTGRID_MODEL=deepseek-v4-pro \
-  -e SWIFTGRID_BASE_URL=https://api.deepseek.com \
-  -e SWIFTGRID_ALLOW_RUNTIME_CONFIG=false \
-  -v swiftgrid-data:/app/data \
-  swiftgrid
-```
-
-Do not put a real key in source control. Copy `.env.example` for local configuration or use your hosting provider's secret manager.
-
-## Model Configuration
-
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `SWIFTGRID_API_KEY` | empty | Server-side OpenAI-compatible API key |
-| `SWIFTGRID_BASE_URL` | DeepSeek API | Compatible model endpoint |
-| `SWIFTGRID_MODEL` | `deepseek-v4-pro` | Model identifier |
-| `SWIFTGRID_ALLOW_RUNTIME_CONFIG` | `true` | Allow the browser to replace the process-wide model settings; set `false` on shared deployments |
-| `PORT` | `8000` | Container/cloud HTTP port |
-
-## Verification
-
-```bash
-cd frontend
-npm run typecheck
-npm run build
-
-cd ..
-python -m py_compile engine.py storage.py swiftgrid/backend/main.py
-python -m unittest discover -s tests -p "test_modeling_multi_agent_*.py" -v
-python -m unittest tests/test_engine_guardrail.py -v
-```
-
-Tests that call a live model consume API credits and are intentionally separate from offline checks. Hosting choices and the production checklist are documented in [Deployment Options](docs/DEPLOYMENT_zh.md).
-
-## Strengths and Trade-offs
-
-### Strengths
-
-- Full-target verification creates a stronger acceptance condition than prompt-only generation.
-- Smart-table results are calculated locally from a validated protocol.
-- SSE makes long model/data jobs observable and cancellable at workflow boundaries.
-- The same runtime supports multi-sheet inputs, reusable logic, Excel export, and model-compatible private endpoints.
-
-### Current limitations
-
-- The active runtime is single-instance and single-tenant; sessions, model configuration, and the logic library are shared.
-- Complex workbook regions, macros, and pivot-table fidelity are not universally supported.
-- Example learning still executes generated Python. AST validation reduces accidental abuse but is not a hardened hostile-code sandbox.
-- The experimental multi-agent IR/compiler is included for research and testing but is not fully wired into the main API.
-- Public hosting still needs authentication, per-user isolation, rate limits, quotas, and a stronger execution sandbox.
-
-## Roadmap
-
-1. Move generated-code execution into an isolated worker with CPU, memory, filesystem, and network limits.
-2. Replace process-global sessions/configuration with user-scoped storage and authentication.
-3. Integrate the typed Workbook Intent IR into the production smart-table pipeline.
-4. Add workbook region/block modeling for complex report templates.
-5. Establish development and holdout benchmarks with zero silent-wrong-success as a release gate.
-
-## Security
-
-Do not expose the current repository as an anonymous public SaaS without additional controls. Uploaded workbooks may contain sensitive business data, and a server-owned model key can generate unbounded cost if the API is left open. See the deployment and data-boundary notes in [the architecture document](docs/ARCHITECTURE_zh.md).
-
-## License
-
-SwiftGrid is released under the [MIT License](LICENSE).
-
-This project is developed for product exploration, engineering research, and portfolio demonstration. The README structure and architecture storytelling were inspired by the clarity of [QueryMind](https://github.com/Tangxihong0922/QueryMind); SwiftGrid's implementation, diagrams, copy, and visual assets are original.
+README 的信息组织与流程图叙事参考 [QueryMind](https://github.com/Tangxihong0922/QueryMind)。本文围绕表速通的实际实现与验证结果编写。

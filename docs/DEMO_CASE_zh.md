@@ -7,7 +7,15 @@
 约 3 分 50 秒，1920×1080，中文合成解说与字幕。视频录制于 2026-11-12，使用真实网页和实际模型调用；没有回填标准答案或模拟成功响应。学习等待经过剪辑并在画面中注明，部分结果延长停留以配合讲解，视频长度不是性能测试结果。
 
 <!-- DEMO_VIDEO -->
-[![观看演示](assets/demo-charts.png)](../README.md)
+
+https://github.com/user-attachments/assets/21b556b6-2f33-4b9f-8b28-df14444e9a6f
+
+<details>
+<summary>展开查看图表页面截图</summary>
+
+![SwiftGrid chart view](assets/demo-charts.png)
+
+</details>
 
 | 时间（约） | 展示内容 |
 | --- | --- |

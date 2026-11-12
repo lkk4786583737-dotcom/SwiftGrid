@@ -9,7 +9,15 @@
 A 3:50 recording of the real web application, with Chinese narration and subtitles: four source tables, example-driven learning, a saved logic library, two subsequent periods, result analysis, charts, and downloads.
 
 <!-- DEMO_VIDEO -->
-[![SwiftGrid charts in the real application](docs/assets/demo-charts.png)](docs/DEMO_CASE_zh.md)
+
+https://github.com/user-attachments/assets/21b556b6-2f33-4b9f-8b28-df14444e9a6f
+
+<details>
+<summary>View a chart screenshot</summary>
+
+![SwiftGrid chart view](docs/assets/demo-charts.png)
+
+</details>
 
 The recording uses actual model requests and downloaded results. Learning wait time is shortened and labelled. Smart-table composition remains experimental and is excluded from this showcase.
 

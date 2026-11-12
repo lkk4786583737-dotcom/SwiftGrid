@@ -21,7 +21,15 @@
 **约 3 分 50 秒，中文解说与字幕，真实 Web 操作。** 用四张业务表学习季度销量报表，再复用到两个新周期，完成结果核对、数据分析、可视化和导出。
 
 <!-- DEMO_VIDEO -->
-[![观看表速通演示：多表学习、跨期复用与图表导出](docs/assets/demo-charts.png)](docs/DEMO_CASE_zh.md)
+
+https://github.com/user-attachments/assets/21b556b6-2f33-4b9f-8b28-df14444e9a6f
+
+<details>
+<summary>展开查看图表页面截图</summary>
+
+![SwiftGrid chart view](docs/assets/demo-charts.png)
+
+</details>
 
 | 想了解什么 | 从哪里开始 |
 | --- | --- |

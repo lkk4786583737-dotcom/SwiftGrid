@@ -188,7 +188,7 @@ export function ChartPanel({
 
   const xLabel = chartType === "bar" || chartType === "pie" ? "分类轴" : "X 轴";
   const yLabel = chartType === "bar" || chartType === "pie" ? "数值轴" : "Y 轴";
-  const chartTitle = initialChart?.title || makeChartTitle(chartType, xCol, yCol);
+  const chartTitle = (!customized && initialChart?.title) || makeChartTitle(chartType, xCol, yCol);
   const chartSubtitle = [
     activeSheet.name,
     chartData ? `全量 ${chartData.total_rows.toLocaleString("zh-CN")} 行` : "全量数据",
@@ -453,7 +453,7 @@ function AxisChart({
   const plot = { left: 76, top: 78, right: 28, bottom: 76 };
   const plotW = width - plot.left - plot.right;
   const plotH = height - plot.top - plot.bottom;
-  const shown = points.slice(0, type === "bar" ? 18 : 80);
+  const shown = points.slice(0, 80);
   const values = shown.map((p) => p.value);
   const max = Math.max(...values, 1);
   const min = type === "scatter" ? Math.min(...values, 0) : 0;
@@ -470,7 +470,7 @@ function AxisChart({
       : plot.left + (shown.length === 1 ? plotW / 2 : (i / (shown.length - 1)) * plotW);
   const yFor = (v: number) => plot.top + plotH - ((v - min) / range) * plotH;
   const linePath = shown.map((p, i) => `${i === 0 ? "M" : "L"} ${xFor(p, i)} ${yFor(p.value)}`).join(" ");
-  const barW = Math.max(10, Math.min(34, plotW / Math.max(shown.length, 1) - 8));
+  const barW = Math.max(2, Math.min(34, (plotW / Math.max(shown.length, 1)) * 0.72));
   const labelStep = Math.max(1, Math.ceil(shown.length / 8));
 
   return (
@@ -546,7 +546,10 @@ function PieChart({
 }) {
   const width = 760;
   const height = 420;
-  const shown = points.slice(0, 8);
+  const grouped = points.length > 8;
+  const shown = grouped
+    ? [...points.slice(0, 7), { label: "其他类别", value: points.slice(7).reduce((sum, point) => sum + point.value, 0) }]
+    : points;
   const total = shown.reduce((s, p) => s + p.value, 0) || 1;
   let acc = 0;
   const r = 110;
@@ -556,7 +559,7 @@ function PieChart({
     <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full max-w-[900px]" role="img" aria-label={title}>
       <rect width={width} height={height} fill="#ffffff" />
       <text x="54" y="30" fill="#0f172a" fontSize="22" fontWeight="700">{title}</text>
-      <text x="54" y="54" fill="#64748b" fontSize="12">{subtitle}{limited ? " · 图中已限量展示" : ""}</text>
+      <text x="54" y="54" fill="#64748b" fontSize="12">{subtitle}{grouped ? " · 其余类别合并为其他类别" : ""}{limited ? " · 图中已限量展示" : ""}</text>
       {shown.map((p, i) => {
         const start = (acc / total) * 2 * Math.PI;
         acc += p.value;

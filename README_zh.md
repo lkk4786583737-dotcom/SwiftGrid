@@ -1,247 +1,123 @@
 <div align="center">
 
-<img src="docs/assets/swiftgrid-hero.png" alt="表速通 SwiftGrid" width="100%" />
+# 表速通 SwiftGrid
 
-# SwiftGrid（表速通）
+**用一份做好的报表，教会 AI 下一期怎么做。**
 
-**给一份源表和一份做好的结果表，让 AI 学会这套 Excel 处理逻辑，并在下一期稳定复用。**
+从源表与目标样例学习处理逻辑，经全量数据校验后保存，复用于后续周期。
 
-[![Python 3.11](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![Next.js 16](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![CI](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml/badge.svg)](https://github.com/lkk4786583737-dotcom/SwiftGrid/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![English](https://img.shields.io/badge/README-English-blue.svg)](README.md)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+[演示与复现](docs/DEMO_CASE_zh.md) · [产品思考与个人贡献](docs/PRODUCT_STORY_zh.md) · [后端与 LLM 流程](docs/ARCHITECTURE_zh.md) · [English](README_en.md)
 
 </div>
 
-表速通是一款面向运营、财务、销售和人力场景的 AI 表格工作流工具。它不要求用户先把复杂 Excel 规则翻译成长篇提示词，而是直接利用用户已经拥有的“源表 + 标准结果表”反推转换逻辑。
+## 🎬 先看一次完整演示
 
-模型负责提出处理逻辑，程序负责在本地用完整数据执行和验收。只有完整结果与目标样例一致，逻辑才会被接受。对于只有源表的场景，模型只生成受控的结构化制表计划，最终数值仍由本地确定性引擎计算。
+**约 3 分 50 秒，中文解说与字幕，真实 Web 操作。** 用四张业务表学习季度销量报表，再复用到两个新周期，完成结果核对、数据分析、可视化和导出。
 
-> **当前定位：** 可运行的开源研究与作品集版本，适合本地单用户体验；尚未完成匿名公网、多租户 SaaS 所需的安全加固。
+<!-- DEMO_VIDEO -->
 
-## 产品界面
+https://github.com/user-attachments/assets/21b556b6-2f33-4b9f-8b28-df14444e9a6f
 
-| 教会新逻辑 | 智能制表 |
+<details>
+<summary>展开查看图表页面截图</summary>
+
+![SwiftGrid chart view](docs/assets/demo-charts.png)
+
+</details>
+
+| 想了解什么 | 从哪里开始 |
 | --- | --- |
-| ![逻辑建模](docs/assets/swiftgrid-home.png) | ![智能制表](docs/assets/swiftgrid-compose.png) |
+| 产品解决什么问题、我做了什么 | [项目背景与五项核心贡献](docs/PRODUCT_STORY_zh.md) |
+| 功能有没有实际跑通 | [演示数据、三期结果与核对方法](docs/DEMO_CASE_zh.md) |
+| LLM 怎样参与、结果怎样验收 | [学习与复用的完整处理流程](docs/ARCHITECTURE_zh.md) |
+| 怎样运行、下一步做什么 | [本地启动](docs/GETTING_STARTED_zh.md) · [产品范围与迭代计划](docs/PRODUCT_PLAN_zh.md) |
 
-在线体验：**等待部署方案确认**。仓库已经提供单容器 Dockerfile，可将静态前端和 Python 后端作为同一个服务部署。
+## 💡 为什么做表速通
 
-## 🌟 核心能力
+项目来自我在产品经理实习中的重复统计任务：活动大促或新功能上线后，监控方案不断调整；统计口径确定后，又要每天拉取新数据，重复关联、汇总和核对。
 
-| 能力 | 说明 |
+业务人员通常已经有一份做好的报表，却很难一次写清全部计算规则。表速通以 **“源数据＋目标样例”** 表达任务：让模型提出转换程序，让程序检验结果，再把通过验证的逻辑存入逻辑库。后续数据沿用同一套口径，减少重复描述与重复建模。
+
+### 真实需求与付酬验证
+
+> 为一名银行从业用户处理 **4 个季度、20 个 Sheet、约 114.6 万行销售数据**，借助 AI 辅助开发专用确定性脚本完成分类汇总，将约半天人工处理缩短至 **约 10 分钟**，获得用户主动付酬，验证了该场景的提效与交付价值。
+
+这是一次真实的**专用脚本交付**，由项目作者根据交付经历确认；客户数据不公开。它验证了需求与交付价值，尚不能等同于当前 Web 产品对任意百万行工作簿的通用处理能力。Web 流程的公开验证见下方演示案例。
+
+## 🌟 当前可以体验什么
+
+| 能力 | 用户得到的价值 |
 | --- | --- |
-| 🎯 **样例驱动学习** | 上传源表与目标结果，不要求用户先写 pandas、公式或完整需求文档。 |
-| 🔁 **生成—执行—校验闭环** | 模型生成逻辑后，本地在完整源数据上运行，并将真实差异反馈给下一轮修正。 |
-| 💬 **基于证据的澄清** | 无法唯一反推时，展示具体行列差异并生成业务人员能直接确认的问题。 |
-| 🧩 **多 Sheet 支持** | 读取所有源工作表，可生成单表或按名称组织的多工作表结果。 |
-| 🧠 **受控智能制表** | 只有源表时，模型输出白名单 JSON 计划，而不是直接编数字或任意 SQL。 |
-| 🧮 **全量确定性计算** | 筛选、派生、分组、聚合、排序和导出由本地 pandas/SQLite 执行。 |
-| 📚 **可复用逻辑库** | 保存校验通过的 Python 逻辑或制表计划，并按结构画像匹配新周期表格。 |
-| 📡 **SSE 实时进度** | 对模型调用和长数据任务持续推送进度、澄清、成功、错误与取消事件。 |
-| 🔌 **兼容模型网关** | 默认使用 DeepSeek，也可接入 OpenAI-compatible 企业模型网关。 |
+| 🎯 样例驱动的逻辑建模 | 上传源表与目标表，减少从零描述关联、汇总、透视和排序规则的负担 |
+| ✅ 执行与目标校验 | 生成的代码在本地处理完整源数据，并与完整学习目标核对；失败时提供差异反馈与有限轮修正 |
+| 📚 逻辑保存与新表复用 | 保存可查看、可下载的处理脚本；新周期先匹配结构并执行已保存逻辑，正常执行路径无需再次调用模型 |
+| 👀 输入与过程可见 | 工作表预览、粘贴表格、流式进度、结果预览和处理报告，帮助检查输入与产物 |
+| 📊 结果分析与可视化 | 基础统计、规则提示、推荐图表、自定义坐标轴与聚合；支持柱状图、饼图、散点图、直方图等 |
+| 📥 可带走的交付物 | 下载 Excel、处理脚本，以及 PNG / SVG / JPG 图表 |
 
-## 🏗️ 后端架构
+**当前展示聚焦“逻辑建模”和“处理新表”。** 智能制表仍在探索，代码与页面保留，但不作为稳定交付功能。自然语言取数、企业知识底座与深度经营分析属于后续计划。当前为本地单用户作品版本，尚未提供常驻公网体验服务。
 
-```mermaid
-flowchart LR
-    U[用户] --> UI[Next.js 静态前端]
-    UI -->|REST 上传与控制| API[FastAPI]
-    API -->|SSE 进度| UI
-    API --> SESSION[内存句柄与会话]
-    API --> JOB[线程任务与事件队列]
-    JOB --> LEARN[样例学习引擎]
-    JOB --> COMPOSE[智能制表引擎]
-    LEARN --> LLM[OpenAI-compatible LLM]
-    COMPOSE --> LLM
-    LEARN --> VERIFY[本地执行与完整目标校验]
-    COMPOSE --> GUARD[受控计划校验器]
-    GUARD --> EXEC[pandas + SQLite 全量执行]
-    VERIFY --> STORE[(本地逻辑库)]
-    EXEC --> STORE
-```
+## 🧭 我在项目中负责什么
 
-当前产品包含两种不同的 LLM 合同：
+我负责需求识别、全部交互设计、技术方案判断、验收与迭代；AI 工具协助后端及部分结构匹配算法开发。
 
-1. **样例学习：** 模型生成 `process_data(source_dfs)`，本地完整执行与目标表逐值比对决定是否通过。
-2. **智能制表：** 模型生成受控计划，后端先校验字段和操作，再用确定性引擎计算最终结果。
+| 能力维度 | 具体工作与证据 |
+| --- | --- |
+| 需求理解 | 从临时建模与周期性报表任务中，拆出“首次定义口径、后续重复执行”两个阶段；通过真实付酬交付验证需求价值 |
+| 产品设计 | 设计学习、核对、保存、复用与导出流程；根据错传同名近似文件的反馈增加预览，为小数据任务增加粘贴入口 |
+| AI 方案设计 | 提出模型生成规则、本地全量执行与目标校验的方案；将模型的推理能力与程序的数值计算职责分开 |
+| 范围与优先级 | 先完成可验收的样例学习与跨期复用，将尚不稳定的智能制表留在探索阶段 |
+| 验收与迭代 | 使用构造数据、实际业务数据和执行轨迹排查问题；本次公开演示核对三期结果，并修复图表类别截断、占比和导出问题 |
 
-### 样例学习的 LLM 闭环
+[展开阅读：问题 → 决策 → 结果 → 反思](docs/PRODUCT_STORY_zh.md)
 
-```mermaid
-sequenceDiagram
-    participant U as 用户
-    participant UI as 前端
-    participant API as FastAPI
-    participant E as engine.py
-    participant M as LLM
-    participant V as 本地校验器
+## 🏗️ 后端与 LLM 如何协作
 
-    U->>UI: 上传源表和目标样例
-    UI->>API: 解析工作簿并取得句柄
-    UI->>API: 启动学习并打开 SSE
-    loop 最多 3 次模型自修正
-        E->>M: 样例 + 公式线索 + 用户确认 + 上轮真实错误
-        M-->>E: process_data(source_dfs)
-        E->>V: AST 护栏与受限内存执行
-        V->>V: 完整结果对比完整目标
-        V-->>E: 通过或返回确定性差异
-    end
-    alt 完整匹配
-        E-->>UI: 展示结果并允许保存逻辑
-    else 仍有业务歧义
-        E-->>UI: 展示具体诊断并请求用户确认
-    end
-```
+![表速通后端架构：样例学习与新表复用](docs/assets/swiftgrid-architecture.svg)
 
-模型不能为自己的输出判定正确。更完整的数据边界、智能制表协议和实验性多 Agent IR 请查看 [后端与 LLM 处理架构](docs/ARCHITECTURE_zh.md)。
+1. **学习阶段：** FastAPI 解析工作簿；LLM 接收字段、少量样例、公式线索与澄清信息，生成 `process_data(source_dfs)`。
+2. **验收阶段：** 引擎检查代码并在本地处理全量源数据，与完整学习目标比对。真实错误或差异反馈到下一轮，默认最多 3 次生成尝试；仍有问题时交由用户澄清。
+3. **复用阶段：** 结构对齐后直接运行保存的逻辑。执行报错才进入模型修复路径；修复代码须先回放学习样例，再尝试处理新表。
+4. **交付阶段：** 提供表格、处理报告、基础统计、图表与下载。数据分析目前以规则与统计为主。
 
-## 🧠 与通用表格聊天助手的区别
+全量计算在本地完成，**字段、样例单元格、公式线索及错误摘要仍可能发送到配置的模型服务**。学习样例通过校验不代表任意新数据都正确；不报错的业务口径变化仍需额外核对。详见 [数据边界与已知局限](docs/ARCHITECTURE_zh.md)。
 
-- **把结果表当作可执行证据。** 目标样例不是普通附件，而是本地验收标准。
-- **模型与最终计算分离。** 模型提出代码或计划，程序对完整数据计算结果。
-- **修正基于真实失败。** 语法、执行和数值差异经过程序提取后才反馈给模型。
-- **逻辑可以离开对话继续复用。** 通过验证的规则会进入逻辑库，用于下个周期。
-- **不确定性不会被隐藏。** 无法唯一反推的业务口径会变成明确问题，而不是静默猜测。
+## 🧪 公开案例：四表关联到季度销量报表
 
-## 仓库结构
+演示使用 Microsoft AdventureWorks 官方样例数据的整理版本，四张表分别为订单头、订单明细、商品与子类别。处理包含三次关联、日期转季度、汇总透视、缺失季度补零、销量排名及占比。
 
-```text
-frontend/                         Next.js 16 静态前端
-swiftgrid/backend/
-  api/                            FastAPI REST / SSE 接口
-  services/orchestrator.py        后台任务与事件流
-  services/compose_ai.py          LLM → 受控制表计划
-  services/compose_plan.py        计划协议校验
-  services/compose.py             导入、画像、SQLite 执行与导出
-engine.py                         样例学习、校验、自修正和复用
-storage.py                        本地逻辑元数据与工件
-scripts/modeling_multi_agent/     实验性 IR、编译器与结果审计
-docs/ARCHITECTURE_zh.md           详细后端与 LLM 架构
-docs/DEPLOYMENT_zh.md             托管方案对比与上线清单
-Dockerfile                        前后端单服务镜像
-```
+| 周期 | 订单明细行数 | 结果行数 | 实际下载结果核对 |
+| --- | ---: | ---: | --- |
+| 学习期 | 20,817 | 18 | 数据值、列序与行序一致 |
+| 下一年复用 | 56,721 | 35 | 数据值、列序与行序一致 |
+| 仅上半年复用 | 37,191 | 30 | 数据值、列序与行序一致；Q3 / Q4 为 0 |
 
-`app.py` 是早期 Streamlit 原型。当前推荐路径是 `frontend/ + swiftgrid/backend/`。
+同一案例的三个周期不能代表整体准确率。当前导出工作表名为“结果”，标准文件为“Sheet1”，尚不等于完整 Excel 模板复刻。数据、独立参考计算、实际输出和核对脚本均位于 [examples/quarterly-sales](examples/quarterly-sales/README.md)。
 
-## 🚀 快速开始
+## ⚖️ 优势与待解决的问题
 
-### 环境要求
+| 已有优势 | 当前边界与改进方向 |
+| --- | --- |
+| 用目标样例形成明确验收依据 | 样例不足可能导致多种规则都通过，需要跨期测试与业务澄清 |
+| 保存脚本，后续正常路径直接执行 | 结构相似不保证业务口径相同；需要更多漂移检测与业务不变量 |
+| 结果、脚本与图表可以检查和导出 | 复杂跨区块模板、宏、透视表与完整样式还原尚未保证 |
+| 完整数据在本地计算，可配置兼容模型接口 | 样例仍可能外发；AST 护栏不是强隔离沙箱，当前没有多租户隔离 |
+| 已有真实交付与公开演示两类证据 | 尚无大样本成功率、平均性能或规模化商业验证 |
 
-- Python 3.11+
-- Node.js 24+
-- DeepSeek API Key 或其他 OpenAI-compatible 模型接口
+## 🚀 本地运行与后续计划
 
-### 启动后端
+推荐使用 `frontend/`（Next.js 静态前端）与 `swiftgrid/backend/`（FastAPI 后端）。[启动指南](docs/GETTING_STARTED_zh.md) 提供开发模式、同源构建和 Docker 命令；`app.py` 为早期 Streamlit 原型。
 
-```powershell
-python -m venv .venv
-.venv\Scripts\pip.exe install -r requirements.txt
-.venv\Scripts\python.exe -m uvicorn swiftgrid.backend.main:app --host 127.0.0.1 --port 8000 --reload
-```
+接下来优先完善跨期正确性、结果契约与执行隔离；随后探索受控智能制表。更长期考虑以 LLM Wiki 与业务本体组织企业指标、字段关系和业务口径，连接自然语言取数与经营分析。以上为计划，详见 [阶段目标与验收条件](docs/PRODUCT_PLAN_zh.md)。
 
-### 开发模式启动前端
+## License 与参考
 
-```powershell
-cd frontend
-npm ci
-npm run dev
-```
+项目代码采用 [MIT License](LICENSE)。公开演示数据来自 [Microsoft AdventureWorks](https://github.com/microsoft/sql-server-samples/tree/master/samples/databases/adventure-works)，保留了 [来源、处理说明与许可](examples/quarterly-sales/SOURCE_AND_LICENSE.md)。
 
-在 `frontend/.env.local` 中设置：
-
-```env
-NEXT_PUBLIC_API_BASE=http://localhost:8000
-NEXT_PUBLIC_MOCK=false
-```
-
-打开 `http://localhost:3000`。
-
-### 构建同源发布版
-
-```powershell
-cd frontend
-npm ci
-npm run build
-cd ..
-.venv\Scripts\python.exe -m uvicorn swiftgrid.backend.main:app --host 127.0.0.1 --port 8000
-```
-
-FastAPI 会自动识别 `frontend/out`，最终页面位于 `http://localhost:8000`。
-
-### Docker
-
-```bash
-docker build -t swiftgrid .
-docker run --rm -p 8000:8000 \
-  -e SWIFTGRID_API_KEY=your-key \
-  -e SWIFTGRID_MODEL=deepseek-v4-pro \
-  -e SWIFTGRID_BASE_URL=https://api.deepseek.com \
-  -e SWIFTGRID_ALLOW_RUNTIME_CONFIG=false \
-  -v swiftgrid-data:/app/data \
-  swiftgrid
-```
-
-不要把真实密钥写进仓库。可以复制 `.env.example` 供本地使用，云端应使用平台的 Secret/Variables。
-
-## 模型环境变量
-
-| 变量 | 默认值 | 用途 |
-| --- | --- | --- |
-| `SWIFTGRID_API_KEY` | 空 | 服务端模型密钥 |
-| `SWIFTGRID_BASE_URL` | DeepSeek API | OpenAI-compatible 接口地址 |
-| `SWIFTGRID_MODEL` | `deepseek-v4-pro` | 模型名称 |
-| `SWIFTGRID_ALLOW_RUNTIME_CONFIG` | `true` | 是否允许浏览器覆盖全进程模型配置；共享部署应设置为 `false` |
-| `PORT` | `8000` | 容器/云服务监听端口 |
-
-## 验证命令
-
-```powershell
-cd frontend
-npm.cmd run typecheck
-npm.cmd run build
-
-cd ..
-.venv\Scripts\python.exe -m py_compile engine.py storage.py swiftgrid\backend\main.py
-.venv\Scripts\python.exe -m unittest discover -s tests -p "test_modeling_multi_agent_*.py" -v
-.venv\Scripts\python.exe -m unittest tests/test_engine_guardrail.py -v
-```
-
-调用真实模型的端到端测试会消耗 API 额度，因此与离线验证分开执行。不同托管方式的取舍与公网开放前清单见 [部署选择](docs/DEPLOYMENT_zh.md)。
-
-## 优势与局限
-
-### 优势
-
-- 完整目标校验比“提示词生成后直接相信模型”有更强的成功条件；
-- 智能制表由受控协议和本地全量执行产生结果；
-- SSE 让耗时模型/数据任务可观察，并支持流程级取消；
-- 一套运行时同时覆盖多 Sheet、逻辑复用、Excel 导出与兼容模型网关。
-
-### 当前局限
-
-- 当前为单实例、单租户架构，会话、模型配置和逻辑库由进程共享；
-- 复杂多区块报表、宏和数据透视表不能保证完整还原；
-- 样例学习仍需执行模型生成的 Python，AST 校验只能降低误用风险，不是强隔离沙箱；
-- 多 Agent IR/编译器属于实验代码，尚未完整接入主 API；
-- 匿名公网部署仍需补充认证、用户隔离、限流、预算和独立执行沙箱。
-
-## 路线图
-
-1. 将生成代码迁入带 CPU、内存、文件系统和网络限制的独立 Worker；
-2. 将进程级会话与配置改为用户级存储并加入认证；
-3. 把 Workbook Intent IR 接入正式智能制表链路；
-4. 引入 Workbook → Sheet → Region/Block 表达，支持复杂报告模板；
-5. 建立 development + holdout 基准，并将“错误成功为零”设为发布门槛。
-
-## 安全说明
-
-当前版本不应在没有额外防护时作为匿名公网 SaaS。上传工作簿可能包含敏感业务数据；若直接暴露服务端模型密钥，也可能产生不可控费用。详细边界见 [架构文档](docs/ARCHITECTURE_zh.md)。
-
-## License
-
-SwiftGrid 使用 [MIT License](LICENSE) 开源。
-
-本项目用于产品探索、工程研究和作品展示。README 的信息组织与架构叙事参考了 [QueryMind](https://github.com/Tangxihong0922/QueryMind) 的清晰表达；SwiftGrid 的实现、图表、文字和视觉素材均为原创。
+README 的信息组织与流程图叙事参考 [QueryMind](https://github.com/Tangxihong0922/QueryMind)。本文围绕表速通的实际实现与验证结果编写。

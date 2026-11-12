@@ -12,12 +12,9 @@ A 3:50 recording of the real web application, with Chinese narration and subtitl
 
 https://github.com/user-attachments/assets/21b556b6-2f33-4b9f-8b28-df14444e9a6f
 
-<details>
-<summary>View a chart screenshot</summary>
+**Chart view:** recommendations, configurable axes and aggregation, and image export.
 
 ![SwiftGrid chart view](docs/assets/demo-charts.png)
-
-</details>
 
 The recording uses actual model requests and downloaded results. Learning wait time is shortened and labelled. Smart-table composition remains experimental and is excluded from this showcase.
 
@@ -59,7 +56,29 @@ flowchart LR
 
 The model receives fields, limited source/target samples, formula hints, clarifications, and error feedback. Full calculations run locally. The default learning loop allows up to three generation attempts. Reuse first runs saved logic; execution errors may trigger model repair, with a replay against the original learning target before trying new data.
 
-Samples can contain sensitive cells. Local full-data execution does not mean zero data leaves the machine. A matching learning example cannot guarantee correctness on unseen data; silent changes in business meaning require additional checks. [Detailed flow and boundaries](docs/ARCHITECTURE_zh.md)
+### Data boundaries: what the model sees and what is stored
+
+Full calculations run on the machine or server hosting SwiftGrid. **Fields, sample cells, formula hints, and error summaries can still be sent to the configured model service.** Saving logic also persists learning data for later replay.
+
+| Data or artifact | Current handling | Boundary |
+| --- | --- | --- |
+| Full source and learning target | Parsed, executed and compared in the service; learning data is persisted when logic is saved | Protect the host and local `data/` directory |
+| Fields and limited source/target samples | Sent as learning context | Samples can contain real business cells |
+| Formulas, clarifications, errors and differences | Used to understand the task and propose repairs | These can also contain sensitive business information |
+| New-period data | Saved code executes locally; errors and the new structure enter repair context if execution fails | The normal execution branch makes no model call; the API still requires model configuration for repair |
+| Scripts, profiles and learning data | Stored in the local logic library for execution and replay | The current library has no per-user isolation |
+| Model key | Server environment or process configuration, used to call the model service | Keep it out of the repository; shared deployment also needs access and spending controls |
+
+The current design uses local full-data execution with limited model context. Enterprise use still needs appropriate handling of samples, logs, storage, and the chosen model gateway.
+
+### Known limitations
+
+1. **Passing the learning example is a scoped result.** Several rules can fit one example. Changes in categories, joins, or deduplication rules may produce silent business errors on later data. Cross-period tests and business constraints remain necessary.
+2. **Matching data does not establish full workbook equivalence.** Complex layouts, macros, pivot tables, formatting and sheet-name contracts are not fully supported. Recorded exports use `结果`; reference files use `Sheet1`.
+3. **Execution and service isolation are incomplete.** AST guards are not a strong sandbox. Sessions, configuration and storage are shared within one instance. A shared service needs isolated execution, authentication, tenant separation and resource/spending controls.
+4. **The evidence has a defined scope.** Three periods of one case are not an overall accuracy benchmark. Basic statistics are not professional business diagnosis. Smart-table composition and multi-agent modeling remain exploratory; retrieval and enterprise knowledge are planned.
+
+API locations, sequence diagrams and implementation entry points are available in the [architecture document](docs/ARCHITECTURE_zh.md).
 
 ## Public, reproducible case
 
@@ -93,7 +112,16 @@ Open `http://localhost:8000`. [Complete setup and Docker instructions](docs/GETT
 
 This is a local single-user portfolio release, without an always-on public service. Smart-table composition and multi-agent IR remain exploratory. AST guards are not a strong sandbox; authentication, tenant isolation, resource controls, and stronger execution boundaries are needed for a shared public service.
 
-Priorities are cross-period correctness, explicit export contracts, and execution isolation. Natural-language retrieval, LLM Wiki / business ontology, and richer business analysis are planned, not integrated capabilities. [Roadmap and proposed acceptance criteria](docs/PRODUCT_PLAN_zh.md)
+| Priority | Planned work | Proposed acceptance direction |
+| --- | --- | --- |
+| P0: correctness | Missing values, duplicate keys, new categories, absent quarters and join-cardinality changes | Independent cases, complete-result checks, totals and business invariants |
+| P0: export contract | Fields, column order, types, sheet names and supported layouts | Downloaded files meet an explicit contract; unsupported features are identified |
+| P0: execution boundary | Isolated workers, resource limits and file/network permissions | Verify resource and permission restrictions and model-visible data |
+| P1: controlled composition | Confirm metrics, classifications and business definitions before execution | Ambiguities trigger questions; plans can be inspected, executed and audited |
+| P2: enterprise knowledge | Explore LLM Wiki, business ontology, retrieval and richer reporting | Evaluate intent understanding and error reduction before selecting integration approaches |
+| Shared-service stage | Authentication, isolation, budgets, persistent storage and operations | Access, resources and costs are controlled before public deployment |
+
+These are proposed priorities, not delivered capabilities or achieved metrics. [Product scope and roadmap](docs/PRODUCT_PLAN_zh.md)
 
 ## License and references
 
